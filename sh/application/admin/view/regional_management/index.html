@@ -1,0 +1,252 @@
+{include file="public/header" /}
+<style type="text/css">
+    /*elementUI分页样式*/
+    .layout-pagination {
+        text-align: right;
+        margin-top: 15px;
+    }
+</style>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <!-- Panel Other -->
+    <div class="ibox float-e-margins" id="app" v-cloak>
+        <div class="ibox-title">
+            <h5>区域管理</h5>
+        </div>
+        <div class="ibox-content">
+            <!--工具条-->
+            <el-form :inline="true" class="demo-form-inline">
+                <el-form-item>
+                    <div class="col-sm-3" style="padding-left: 0px;">
+                        <div class="input-group">
+
+                            <input type="text" class="form-control" v-model="key" placeholder="请输入需查询的区域"/>
+                            <span class="input-group-btn">
+                                <a type="button" class="btn btn-primary" @click="search"><i class="fa fa-search"></i> 搜索</a>
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{:url('RegionalManagement/add')}" type="button" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> 添加
+                    </a>
+                    <a href="#" @click="handleChange" type="button" class="btn btn-primary">
+                        <i class=""></i> 更新排序
+                    </a>
+                    <div class="col-sm-1" style="padding-left: 0px;">
+                        <div class="input-group ">
+                            <select  class="form-control" v-model="states" @change="state_s">
+                                <option value="">--请选择状态--</option>
+                                <option style="margin-left:55px;" :value="1">启动</option>
+                                <option style="margin-left:55px;" :value="2">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                </el-form-item>
+            </el-form>
+
+            <div class="example-wrap">
+                <div class="example">
+                    <el-table :data="list" border highlight-current-row v-loading="listLoading"
+                              element-loading-text="拼命加载中..." @selection-change="handleSelectionChange"
+                              style="width: 100%">
+                        <!--<el-table-column prop="id" label="ID"  align="center"></el-table-column>-->
+                        <el-table-column prop="paix" label="序号"  align="center"></el-table-column>
+                        <el-table-column prop="name" label="名字"  align="center"></el-table-column>
+                        <el-table-column prop="state" label="状态" width="120" align="center">
+                            <template scope="scope">
+                                <span v-if="scope.row.state==1" style="color:#fff" @click="status(scope.row)"
+                                      class="label label-info">启用</span>
+                                <span v-if="scope.row.state==2" style="color:#fff" @click="status(scope.row)"
+                                      class="label label-danger">禁用</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="creation_time" label="创建时间"  align="center"></el-table-column>
+                        <div class="hr-line-dashed"></div>
+                        <el-table-column  width="220" prop="sort" label="排序"
+                                          align="center" >
+                            <template scope="scope">
+                                <el-input-number v-model="scope.row.sort"  label="排序" :min="1"  :max="99999999999" label="描述文字" style="width:80%"></el-input-number>
+                            </template>
+                        </el-table-column>
+                        <el-table-column align="center"  label="操作">
+                            <template scope="scope">
+                                <div style="margin-top: 5px;"></div>
+                                <div style="margin-top: 5px;"></div>
+                                <el-button type="primary" size="mini" shiro:hasPermission="admin:article:edit" size="small" type="text"
+                                           @click="edit(scope.row)">编辑
+                                </el-button>
+                                <el-button type="danger" size="mini" shiro:hasPermission="admin:article:del" size="small" type="text"
+                                           @click="del(scope.row)">删除
+                                </el-button>
+                                <div style="margin-top: 5px;"></div>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="layout-pagination">
+                        <el-pagination
+                                @size-change="handleSizeChange"
+                                @current-change="handleCurrentChange"
+                                :current-page="currentPage"
+                                :page-sizes="[10, 20, 50, 100]"
+                                :page-size="pageSize"
+                                layout="total, sizes, prev, pager, next, jumper"
+                                :total="totalCount">
+                        </el-pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{include file="public/footer" /}
+
+<script type="text/javascript">
+
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            //表格当前页数据
+            list: [],
+            //搜索条件
+            key: '',
+            //默认每页数据量
+            pageSize: 10,
+            //当前页码
+            currentPage: 1,
+            //默认数据总数
+            totalCount: 0,
+            //列表加载遮罩
+            listLoading: false,
+            states:'',
+        },
+        created: function () {
+            //this.date=vm.date["new Date"];
+
+            this.fetch();
+        },
+        methods: {
+            //从服务器读取数据
+            loadData(key, currentPage, pageSize,states) {
+                let vm = this;
+                vm.listLoading = true;
+                $.getJSON('{:url("RegionalManagement/index")}', {key: key, page: currentPage, rows: pageSize,states:states}, function (res) {
+                    vm.list = [];
+                    vm.totalCount = res.count;
+                    vm.list = res.data;
+                    vm.listLoading = false;
+                });
+            },
+            //从服务器读取数据
+            fetch() {
+                let vm = this;
+                this.loadData(vm.key, vm.currentPage, vm.pageSize);
+            },
+            state_s(){
+                this.loadData(this.key, this.currentPage, this.pageSize,this.states);
+            },
+            openMessage(type, message) {
+                this.$message({
+                    type: type,
+                    duration: 1500,
+                    message: message
+                });
+            },
+            //每页显示数据量变更
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.loadData(this.key, this.currentPage, this.pageSize,this.states);
+            },
+            //页码变更
+            handleCurrentChange(val) {
+                this.currentPage = val;
+                this.loadData(this.key, this.currentPage, this.pageSize,this.states);
+            },
+            //多选响应
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            //搜索
+            search() {
+                this.fetch();
+            },
+            edit(obj){
+                location.href = "{:url('RegionalManagement/edit')}?id=" + obj.id;
+            },
+            handleChange(obj)
+            {
+                var vm = this;
+                let param = new FormData();
+                param.append('list', JSON.stringify(vm.list));
+                axios.post('{:url("RegionalManagement/postSort")}', param).then(function (ras) {
+                    if (ras.data.code == 200) {
+                        layer.msg(ras.data.msg, {icon: 6, time: 1500, shade: 0.1}, function (index) {
+                            layer.close(index);
+                            vm.fetch();
+                        });
+                    } else {
+                        layer.msg(ras.data.msg, {icon: 5, time: 1500, shade: 0.1}, function (index) {
+                            layer.close(index);
+                        });
+                    }
+                });
+            },
+            excel(){
+
+                var id = this.multipleSelection.map(item => item.id).join();
+
+                //console.log(id);return false;
+                window.location.href = '{:url("statistics/postsmintentionexcel")}?id='+id;
+            },
+            //删除
+            del(obj) {
+                this.$confirm('此操作将永久删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }).then(() => {
+                    var vm = this;
+                    let param = new FormData();
+                    param.append('id', obj.id);
+                    axios.post('{:url("RegionalManagement/postDelete")}', param).then(function (ras) {
+                        if (ras.data.code == 200) {
+                            layer.msg(ras.data.msg, {icon: 6, time: 1500, shade: 0.1}, function (index) {
+                                layer.close(index);
+                                vm.fetch();
+                            });
+                        } else {
+                            layer.msg(ras.data.msg, {icon: 5, time: 1500, shade: 0.1}, function (index) {
+                                layer.close(index);
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    vm.openMessage('info', '已取消删除');
+                });
+            },
+            //状态
+            status(obj) {
+                var vm = this;
+                let param = new FormData();
+                param.append('id', obj.id);
+                axios.post('{:url("RegionalManagement/postState")}', param).then(function (ras) {
+                    if (ras.data.code == 200) {
+                        layer.msg(ras.data.msg, {icon: 6, time: 1500, shade: 0.1}, function (index) {
+                            layer.close(index);
+                            vm.fetch();
+                        });
+                    } else {
+                        layer.msg(ras.data.msg, {icon: 5, time: 1500, shade: 0.1}, function (index) {
+                            layer.close(index);
+                        });
+                    }
+                });
+            },
+        }
+    })
+
+</script>
+
+</body>
+</html>

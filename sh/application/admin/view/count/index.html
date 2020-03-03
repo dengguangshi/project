@@ -1,0 +1,129 @@
+{include file="public/header" /}
+<style type="text/css">
+    /*elementUI分页样式*/
+    .layout-pagination {
+        text-align: right;
+        margin-top: 15px;
+    }
+</style>
+<script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+<script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+<script src="https://code.highcharts.com.cn/highcharts/modules/series-label.js"></script>
+<script src="https://code.highcharts.com.cn/highcharts/modules/oldie.js"></script>
+<script src="https://code.highcharts.com.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <!-- Panel Other -->
+    <div class="ibox float-e-margins" id="app" v-cloak>
+        <div class="ibox-title">
+            <h5>流量统计折线图</h5>
+        </div>
+        <div class="ibox-content">
+            <!--工具条-->
+            <el-form :inline="true" class="demo-form-inline" style="">
+                <el-form-item>
+                    <div class="col-sm-3" style="width: 200px">
+                        <div class="input-group ">
+                            <select  class="form-control" v-model="status" @change="sel">
+                                <option style="margin-left:55px;" :value="3">===日===</option>
+                                <option style="margin-left:55px;" :value="1">===月===</option>
+                                <option style="margin-left:55px;" :value="2">===年===</option>
+                            </select>
+                        </div>
+                    </div>
+                </el-form-item>
+            </el-form>
+
+            <div class="example-wrap">
+                <div class="example">
+
+                    <!-----------------折线图------------------->
+                    <div id="container" style="width: 90%;height:500px;"></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{include file="public/footer" /}
+
+<script type="text/javascript">
+
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            //表格当前页数据
+            list: [],
+            status: '3',
+
+        },
+        created: function () {
+            //this.date=vm.date["new Date"];
+
+            this.loadData(this.status);
+        },
+        methods: {
+            //从服务器读取数据
+            loadData(status) {
+                let vm = this;
+                vm.listLoading = true;
+                $.getJSON('{:url("count/index")}', {status: status}, function (res) {
+                    vm.time = [];
+                    vm.number = [];
+                    vm.time = res.time;//X轴时间
+                    vm.number=res.number;//Y轴访问人数
+                    vm.date = res.date;//标题上的时间
+                    vm.listLoading = false;
+                    var chart = Highcharts.chart('container', {
+                        title: {
+                            text: vm.date+' 三惠 官网访问人数统计'
+                        },
+                        subtitle: {
+                            text: '数据来源：http://eartisan.wsandos.com/#/'
+                        },
+                        yAxis: {
+                            title: {
+                                text: '访问人数'
+                            }
+                        },
+                        legend: {
+                            layout: 'vertical',
+                            align: 'right',
+                            verticalAlign: 'middle'
+                        },
+                        xAxis: {
+                            categories: vm.time
+                        },
+                        series: [{
+                            name: '访问人数',
+                            data: vm.number
+                        },],
+                        responsive: {
+                            rules: [{
+                                condition: {
+                                    maxWidth: 500
+                                },
+                                chartOptions: {
+                                    legend: {
+                                        layout: 'horizontal',
+                                        align: 'center',
+                                        verticalAlign: 'bottom'
+                                    }
+                                }
+                            }]
+                        }
+                    });
+                });
+            },
+            //筛选时间类型
+            sel(){
+                this.loadData(this.status);
+            },
+        },
+    })
+</script>
+
+</body>
+</html>

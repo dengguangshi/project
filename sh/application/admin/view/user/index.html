@@ -1,0 +1,223 @@
+{include file="public/header" /}
+<style type="text/css">
+    /*elementUI分页样式*/
+    .layout-pagination {
+        text-align: right;
+        margin-top: 15px;
+    }
+</style>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <!-- Panel Other -->
+    <div class="ibox float-e-margins" id="app" v-cloak>
+        <div class="ibox-title">
+            <h5>用户列表</h5>
+        </div>
+        <div class="ibox-content">
+            <!--搜索框开始-->
+            <el-form :inline="true" class="demo-form-inline">
+                <el-form-item>
+                    <div class="col-sm-3" style="padding-left: 0px;">
+                        <div class="input-group">
+
+                            <input type="text" class="form-control" v-model="key" placeholder="请输入需查询的用户"/>
+                            <span class="input-group-btn">
+								<a type="button" class="btn btn-primary" @click="search"><i class="fa fa-search"></i> 搜索</a>
+							</span>
+                        </div>
+                    </div>
+                    <a href="{:url('user/add')}" type="button" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> 添加
+                    </a>
+                </el-form-item>
+            </el-form>
+            <!--搜索框结束-->
+
+            <div class="example-wrap">
+                <div class="example">
+                    <el-table :data="list" border highlight-current-row v-loading="listLoading"
+                              element-loading-text="拼命加载中..." @selection-change="handleSelectionChange"
+                              style="width: 100%">
+                        <el-table-column prop="id" label="ID"  align="center"></el-table-column>
+                        <el-table-column prop="username" label="管理员名称"  align="center"></el-table-column>
+                        <el-table-column prop="portrait" label="头像" show-overflow-tooltip
+                                         align="center">
+                            <template scope="scope">
+                                <img :src="scope.row.portrait"
+                                     style="width: 150px;padding: 5px">
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="title" label="管理员角色"  align="center"></el-table-column>
+                        <el-table-column prop="loginnum" label="登录次数"  align="center"></el-table-column>
+                        <el-table-column prop="last_login_ip" label="上次登录ip"  align="center"></el-table-column>
+                        <el-table-column prop="last_login_time" label="上次登录时间"  align="center"></el-table-column>
+                        <el-table-column prop="real_name" label="真实姓名"  align="center"></el-table-column>
+                        <el-table-column prop="status" label="状态" width="120" align="center">
+                            <template scope="scope">
+								<span v-if="scope.row.status==1" style="color:#fff" @click="status(scope.row)"
+                                      class="label label-info">启用</span>
+                                <span v-if="scope.row.status==0" style="color:#fff" @click="status(scope.row)"
+                                      class="label label-danger">禁用</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column align="center"  label="操作">
+                            <template scope="scope">
+                                <div style="margin-top: 5px;"></div>
+                                <div style="margin-top: 5px;"></div>
+                                <el-button type="primary" size="mini" shiro:hasPermission="admin:article:edit" size="small" type="text"
+                                           @click="edit(scope.row)">编辑
+                                </el-button>
+                                <el-button type="danger" size="mini" shiro:hasPermission="admin:article:del" size="small" type="text"
+                                           @click="del(scope.row)">删除
+                                </el-button>
+                                <div style="margin-top: 5px;"></div>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <div class="layout-pagination">
+                        <el-pagination
+                                @size-change="handleSizeChange"
+                                @current-change="handleCurrentChange"
+                                :current-page="currentPage"
+                                :page-sizes="[10, 20, 50, 100]"
+                                :page-size="pageSize"
+                                layout="total, sizes, prev, pager, next, jumper"
+                                :total="totalCount">
+                        </el-pagination>
+                    </div>
+                </div>
+            </div>
+
+            <!-- End Example Pagination -->
+        </div>
+    </div>
+</div>
+<!-- End Panel Other -->
+</div>
+
+{include file="public/footer" /}
+
+<script type="text/javascript">
+
+
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            //表格当前页数据
+            list: [],
+            //搜索条件
+            key: '',
+            //默认每页数据量
+            pageSize: 10,
+            //当前页码
+            currentPage: 1,
+            //默认数据总数
+            totalCount: 0,
+            //列表加载遮罩
+            listLoading: false,
+        },
+        created: function () {
+            //this.date=vm.date["new Date"];
+
+            this.fetch();
+        },
+        methods: {
+            //从服务器读取数据
+            loadData(key, currentPage, pageSize) {
+                let vm = this;
+                vm.listLoading = true;
+                $.getJSON('{:url("user/index")}', {key: key, page: currentPage, rows: pageSize}, function (res) {
+                    console.log(res);
+                    vm.list = [];
+                    vm.totalCount = res.count;
+                    vm.list = res.data;
+                    vm.listLoading = false;
+                });
+            },
+            //从服务器读取数据
+            fetch() {
+                let vm = this;
+                this.loadData(vm.key, vm.currentPage, vm.pageSize);
+            },
+            state_s(){
+                this.loadData(this.key, this.currentPage, this.pageSize,this.states);
+            },
+            openMessage(type, message) {
+                this.$message({
+                    type: type,
+                    duration: 1500,
+                    message: message
+                });
+            },
+            //每页显示数据量变更
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.loadData(this.key, this.currentPage, this.pageSize);
+            },
+            //页码变更
+            handleCurrentChange(val) {
+                this.currentPage = val;
+                this.loadData(this.key, this.currentPage, this.pageSize);
+            },
+            //多选响应
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            //搜索
+            search() {
+                this.fetch();
+            },
+            edit(obj){
+                location.href = "{:url('user/edit')}?id=" + obj.id;
+            },
+
+            //删除
+            del(obj) {
+                this.$confirm('将删除该数据, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }).then(() => {
+                    var vm = this;
+                    let param = new FormData();
+                    param.append('id', obj.id);
+                    axios.post('{:url("user/del")}', param).then(function (ras) {
+                        if (ras.data.code == 200) {
+                            layer.msg(ras.data.msg, {icon: 6, time: 1500, shade: 0.1}, function (index) {
+                                layer.close(index);
+                                vm.fetch();
+                            });
+                        } else {
+                            layer.msg(ras.data.msg, {icon: 5, time: 1500, shade: 0.1}, function (index) {
+                                layer.close(index);
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    vm.openMessage('info', '已取消删除');
+                });
+            },
+            //状态
+            status(obj) {
+                var vm = this;
+                let param = new FormData();
+                param.append('id', obj.id);
+                axios.post('{:url("user/state")}', param).then(function (ras) {
+                    if (ras.data.code == 200) {
+                        layer.msg(ras.data.msg, {icon: 6, time: 1500, shade: 0.1}, function (index) {
+                            layer.close(index);
+                            vm.fetch();
+                        });
+                    } else {
+                        layer.msg(ras.data.msg, {icon: 5, time: 1500, shade: 0.1}, function (index) {
+                            layer.close(index);
+                            vm.fetch();
+                        });
+                    }
+                });
+            },
+        }
+    })
+</script>
+</body>
+</html>

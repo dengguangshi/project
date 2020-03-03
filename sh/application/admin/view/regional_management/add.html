@@ -1,0 +1,188 @@
+{include file="public/header" /}
+<link href="/static/admin/summernote/bootstrap.min.css" rel="stylesheet">
+<link href="/static/admin/summernote/summernote.css" rel="stylesheet">
+<script src="/static/admin/summernote/summernote_config.js"defer></script>
+<script src="/static/admin/summernote/summernote.js?v=3.1"defer></script>
+<script src="/static/admin/summernote/summernote_config_for_edit.js"defer></script>
+<script src="/static/admin/summernote/lang/summernote-zh-CN.js"defer></script>
+<style type="text/css">
+    .layout-pagination {
+        text-align: right;
+        margin-top: 15px;
+    }
+    .modal-content,.modal-dialog{
+        position: relative;
+        z-index: 9000 !important;
+    }
+    .modal-dialog{
+        width: 70% !important;
+    }
+    .modal-backdrop{
+        /*opacity: .3 !important;*/
+        /*z-index: -1 !important;*/
+        display: none !important;
+    }
+    .c-background{
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        background: rgba(0,0,0,.5);
+
+    }
+    .in{
+        height: 100vh;
+    }
+    #dive{
+        width: 722px !important;
+    }
+    .dis{
+        width: 722px !important;
+    }
+    .file-item{float: left; position: relative; width: 110px;height: 110px; margin: 0 20px 20px 0; padding: 4px;}
+    .file-item .info{overflow: hidden;}
+    .uploader-list{width: 100%; overflow: hidden;}
+    #imgPicker{
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        background: #00b7ee;
+        padding: 10px 15px;
+        color: #fff;
+        text-align: center;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    #fengmian{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 16%;
+        height: 21%;
+        margin: 0;
+        font-size: 23px;
+        cursor: pointer;
+        filter: alpha(opacity=0);
+        opacity: 0;
+        direction: ltr;
+    }
+    /**
+        将编辑器的遮罩层关掉
+     */
+    .modal-backdrop{
+        display: none;
+    }
+    #container{
+        min-width:500px;
+        min-height:500px;
+    }
+</style>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight" id="app">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>区域管理-添加</h5>
+                </div>
+                <div slot="body">
+                    <div class="wrapper wrapper-content animated fadeInRight">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="ibox float-e-margins">
+                                    <div class="ibox-content">
+                                        <div class="form-horizontal m-t">
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">所在区域：</label>
+                                                <div class="input-group col-sm-3">
+                                                    <input type="text" v-model="name" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">状态：</label>
+                                                <el-radio-group v-model="state">
+                                                    <el-radio-button label="1">启用</el-radio-button>
+                                                    <el-radio-button label="2">禁用</el-radio-button>
+                                                </el-radio-group>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <div class="col-sm-4 col-sm-offset-3">
+                                                    <button class="btn btn-primary" @click="toSubmit" ><i class="fa fa-save"></i> 添加</button>&nbsp;&nbsp;&nbsp;
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer" /}
+
+<script type="text/javascript">
+
+    vm = new Vue({
+        el: '#app',
+        data: {
+            name:'',
+            sort:'',
+            state:1,
+        },
+        mounted:function()
+        {
+
+        },
+        methods: {
+            handleChange(value) {
+                console.log(value);
+            },
+            imgdds:function(){
+                var vm = this;
+                vm.imgd= '0';
+            },
+            toSubmit:function()
+            {
+                var vm = this;
+                let param = new FormData();
+                if(vm.name==""){
+                    layer.msg('请输入名字,名字不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.name.length>=5){
+                    layer.msg('请输入5个字以内的名字', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                param.append('name', vm.name);
+                param.append('state', vm.state);
+                axios.post('{:url("RegionalManagement/add")}', param).then(function (ras) {
+                    if(ras.data.code == 200){
+                        layer.msg(ras.data.msg, {icon: 6,time:1500,shade: 0.1}, function(index){
+                            layer.close(index);
+                            window.location.href="{:url('RegionalManagement/index')}";
+                        });
+                    }else{
+                        layer.msg(ras.data.msg, {icon: 5,time:1500,shade: 0.1}, function(index){
+                            layer.close(index);
+                        });
+                    }
+                });
+            },
+        },
+
+    });
+
+</script>
+</body>
+</html>

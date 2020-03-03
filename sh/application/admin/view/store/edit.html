@@ -1,0 +1,449 @@
+{include file="public/header" /}
+<link href="/static/admin/summernote/bootstrap.min.css" rel="stylesheet">
+<link href="/static/admin/summernote/summernote.css" rel="stylesheet">
+<script src="/static/admin/summernote/summernote_config.js"defer></script>
+<script src="/static/admin/summernote/summernote.js?v=3.1"defer></script>
+<script src="/static/admin/summernote/summernote_config_for_edit.js"defer></script>
+<script src="/static/admin/summernote/lang/summernote-zh-CN.js"defer></script>
+<style type="text/css">
+    .layout-pagination {
+        text-align: right;
+        margin-top: 15px;
+    }
+    .modal-content,.modal-dialog{
+        position: relative;
+        z-index: 9000 !important;
+    }
+    .modal-dialog{
+        width: 70% !important;
+    }
+    .modal-backdrop{
+        /*opacity: .3 !important;*/
+        /*z-index: -1 !important;*/
+        display: none !important;
+    }
+    .c-background{
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        background: rgba(0,0,0,.5);
+
+    }
+    .in{
+        height: 100vh;
+    }
+    #dive{
+        width: 722px !important;
+    }
+    .dis{
+        width: 722px !important;
+    }
+    .file-item{float: left; position: relative; width: 110px;height: 110px; margin: 0 20px 20px 0; padding: 4px;}
+    .file-item .info{overflow: hidden;}
+    .uploader-list{width: 100%; overflow: hidden;}
+    #imgPicker{
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        background: #00b7ee;
+        padding: 10px 15px;
+        color: #fff;
+        text-align: center;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    #fengmian{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 16%;
+        height: 21%;
+        margin: 0;
+        font-size: 23px;
+        cursor: pointer;
+        filter: alpha(opacity=0);
+        opacity: 0;
+        direction: ltr;
+    }
+    /**
+        将编辑器的遮罩层关掉
+     */
+    .modal-backdrop{
+        display: none;
+    }
+    #container{
+        min-width:500px;
+        min-height:500px;
+    }
+</style>
+<script charset="utf-8" src="https://3gimg.qq.com/lightmap/components/geolocation/geolocation.min.js"></script>
+<script charset="utf-8" src="https://map.qq.com/api/js?v=2.exp&key=VLIBZ-UMTKW-4S5RO-OWJCC-VKDFV-RUFXI
+"></script>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight" id="app">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>门店列表-编辑</h5>
+                </div>
+                <div slot="body">
+                    <div class="wrapper wrapper-content animated fadeInRight">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="ibox float-e-margins">
+                                    <div class="ibox-content">
+                                        <div class="form-horizontal m-t">
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">banner(推荐尺寸1400*700)：</label>
+                                                <div class="input-group col-sm-9">
+                                                    <div class="row">
+                                                        <!--<label style="margin-bottom: 8px;" for="">新增图片</label>-->
+                                                        <div style="margin-bottom: 10px;margin-left:10px" ref="view">
+                                                            <img style="width:120px; height:120px" title="点击删除" :src="newimg" v-show="newimg"
+                                                                 @click="removeNewImage(index)" v-for="(newimg,index) in list.banner"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-sm-5"  @click="imgdds()">
+                                                            <form ref="form">
+                                                                <input type="file" style="display:none" id="image" name="file" multiple="multiple"
+                                                                       accept="image/gif,image/jpeg,image/x-png" class="form-control" ref="pick"
+                                                                       @change="pickImage($event,2)"/>
+                                                                <div>
+                                                                    <span @click="$refs.pick.click()" class="btn btn-primary btn-block">选择图片</span>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">门店名称：</label>
+                                                <div class="input-group col-sm-3">
+                                                    <input type="text" v-model="list.name" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label ">门店介绍(文字):</label>
+                                                <div class="input-group col-sm-5">
+                                                    <div id="introduce" class="summernote" v-model="list.introduce">{$data.introduce}</div>
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">详细地址：</label>
+                                                <div class="input-group col-sm-3">
+                                                    <input type="text" v-model="list.detailed_address" class="form-control">
+                                                    <el-button type="primary"  @click="gengxin()" style="margin-top: 10px">搜索地址</el-button>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">地图：</label>
+                                                <div class="input-group col-sm-4">
+                                                    <div id="container"></div>
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">联系方式：</label>
+                                                <div class="input-group col-sm-3">
+                                                    <input type="text" v-model="list.phone" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">所在区域：</label>
+                                                <el-select v-model="list.regional_management_id" placeholder="请选择">
+                                                    <el-option
+                                                            v-for="item in options"
+                                                            :key="item.id"
+                                                            :label="item.name"
+                                                            :value="item.id">
+                                                    </el-option>
+                                                </el-select>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">所属品牌：</label>
+                                                <el-select v-model="list.vehicle_brand_id" placeholder="请选择">
+                                                    <el-option
+                                                            v-for="item in optionss"
+                                                            :key="item.id"
+                                                            :label="item.name"
+                                                            :value="item.id">
+                                                    </el-option>
+                                                </el-select>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">状态：</label>
+                                                <el-radio-group v-model="list.state">
+                                                    <el-radio-button label="1">启用</el-radio-button>
+                                                    <el-radio-button label="2">禁用</el-radio-button>
+                                                </el-radio-group>
+                                            </div>
+                                            <div class="hr-line-dashed"></div>
+                                            <div class="form-group">
+                                                <div class="col-sm-4 col-sm-offset-3">
+                                                    <button class="btn btn-primary" @click="toSubmit" ><i class="fa fa-save"></i> 保存</button>&nbsp;&nbsp;&nbsp;
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer" /}
+
+<script type="text/javascript">
+
+    vm = new Vue({
+        el: '#app',
+        data: {
+            options:[],
+            optionss:[],
+            imglists:[],
+            imgNames:[],
+            list:[],
+        },
+        mounted:function()
+        {
+            this.options={$options};
+            this.optionss={$optionss};
+            console.log(this.optionss)
+            this.list={$data};
+            //console.log(this.dynamicValidateForm);
+            this.init();
+        },
+        methods: {
+            removeDomain(item) {
+                var index = this.dynamicValidateForm.domains.indexOf(item)
+                if (index !== -1) {
+                    this.dynamicValidateForm.domains.splice(index, 1)
+                }
+            },
+            addDomain() {
+                if (this.dynamicValidateForm.domains.length>=4)
+                {
+                    layer.msg('新增标签最多只能4个', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                this.dynamicValidateForm.domains.push({
+                    img: '',
+                    text:'',
+                });
+                //console.log(this.dynamicValidateForm.domains)
+            },
+            init() {
+                var vm = this;
+                // 创建地图
+                var map = new qq.maps.Map(document.getElementById("container"), {
+                    center: new qq.maps.LatLng(vm.list.lat, vm.list.lng),      // 地图的中心地理坐标
+                    zoom: 16,     // 地图缩放级别
+                    mapStyleId: 'style1'  // 该key绑定的style1对应于经典地图样式，若未绑定将弹出无权限提示窗
+                });
+                //创建一个Marker
+                var marker = new qq.maps.Marker({
+                    //设置Marker的位置坐标
+                    position: new qq.maps.LatLng(vm.list.lat, vm.list.lng),
+                    //设置显示Marker的地图
+                    map: map
+                });
+                marker.setVisible(true);
+                marker.setAnimation(qq.maps.MarkerAnimation.DOWN);
+
+            },
+            gengxin()
+            {
+                var vm =this;
+                let param = new FormData();
+                param.append('address',vm.list.detailed_address);
+                axios.post('{:url("ditu/getLatLng")}', param).then(function (ras) {
+                    console.log(ras);
+                    vm.list.lat = ras.data.lat;
+                    vm.list.lng = ras.data.lng;
+                    vm.init();
+                });
+            },
+            datetime(t) {
+                console.log(this.date[0]);//结果为一个数组，如：2018-12-02T03:24:02.000Z，想要我们需要的时间格式，要进行Date的操作
+            },
+            handleChange(value) {
+                console.log(value);
+            },
+            imgdds:function(){
+                var vm = this;
+                vm.imgd= '0';
+            },
+            removeNewImage:function(index){
+                if(confirm("确认删除?")){
+                    let data = this.list.banner;
+                    let newData  = [];
+                    for(let i=0; i< data.length; i++){
+                        if(i !== index){
+                            newData.push(data[i]);
+                        }
+                    }
+                    this.list.banner = newData;
+                }
+            },
+            removeNewImages:function(index){
+                if(confirm("确认删除?")){
+                    let data = this.list.imglists;
+                    let newData  = [];
+                    for(let i=0; i< data.length; i++){
+                        if(i !== index){
+                            newData.push(data[i]);
+                        }
+                    }
+                    this.list.imglists = newData;
+                }
+            },
+            pickImage: function (event,ii,index) {
+                var
+                    file = event.target.files[0],//获取到了对文件的描述信息
+                    vm = this;
+                if(ii == 2){
+                    if(vm.list.banner.length >= 4){
+                        layer.msg('banner最多3张', {icon: 5,time:1500,shade: 0.1}, function(index){
+                            layer.close(index);
+                        });
+                        return false;
+                    }
+                }
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(e) {
+                    let data = new FormData();
+                    data.append('image',e.target.result);
+                    axios.post('{:url("Upload/upload")}', data).then(function (ras) {
+                        if(ii == 1){
+                            vm.dynamicValidateForm.domains[index].img=ras.data.data[0];
+                            vm.dynamicValidateForm.domains[index].text="";
+                            console.log(vm.dynamicValidateForm)
+
+                        }else{
+                            vm.list.banner.push(ras.data.data);
+
+                        }
+                    });
+                };
+                return false;
+            },
+            toSubmit:function()
+            {
+                var vm = this;
+                let param = new FormData();
+                if(vm.list.banner==""){
+                    layer.msg('请上传banner,banner不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.name==""){
+                    layer.msg('请上传门店名称,门店名称不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.name.length>=20){
+                    layer.msg('请输入20个字以内的门店名称', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if($('#introduce').summernote('code')==""){
+                    layer.msg('请输入门店介绍,门店介绍不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.detailed_address==""){
+                    layer.msg('请输入详细地址,详细地址不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.detailed_address.length>=50){
+                    layer.msg('请输入50个字以内的详细地址', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.phone==""){
+                    layer.msg('请输入联系方式,联系方式不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                /*if(!(/^1[3456789]\d{9}$/.test(vm.list.phone))){
+                    layer.msg('请输入正确的联系方式,联系方式必须为数字', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }*/
+                let a=/^1[0-9]{10,15}$|\d{3}-\d{8}|\d{4}-\d{7}/;
+                if(!(a.test(vm.list.phone))){
+                    layer.msg('请输入正确的固定电话或手机号码联系方式,联系方式必须为数字', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.regional_management_id==""){
+                    layer.msg('请选择所在区域,所在区域不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                if(vm.list.vehicle_brand_id==""){
+                    layer.msg('请选择所属品牌,所属品牌不能为空！', {icon: 5,time:1500,shade: 0.1}, function(index){
+                        layer.close(index);
+                    });
+                    return false;
+                }
+                param.append('id', vm.list.id);
+                param.append('banner', vm.list.banner);
+                param.append('name', vm.list.name);
+                param.append('introduce',$('#introduce').summernote('code'));
+                param.append('detailed_address', vm.list.detailed_address);
+                param.append('phone', vm.list.phone);
+                param.append('regional_management_id', vm.list.regional_management_id);
+                param.append('vehicle_brand_id', vm.list.vehicle_brand_id);
+                param.append('state', vm.list.state);
+                param.append('lat', vm.list.lat);
+                param.append('lng', vm.list.lng);
+                axios.post('{:url("Store/edit")}', param).then(function (ras) {
+                    if(ras.data.code == 200){
+                        layer.msg(ras.data.msg, {icon: 6,time:1500,shade: 0.1}, function(index){
+                            layer.close(index);
+                            window.location.href="{:url('Store/index')}";
+                        });
+                    }else{
+                        layer.msg(ras.data.msg, {icon: 5,time:1500,shade: 0.1}, function(index){
+                            layer.close(index);
+                        });
+                    }
+                });
+            },
+        },
+
+    });
+
+</script>
+</body>
+</html>

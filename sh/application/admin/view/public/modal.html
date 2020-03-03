@@ -1,0 +1,130 @@
+<template id="modal-template">
+    <div class="modal fade c-fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document" :class="{'modal-sm': small}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div class="modal-title">
+                        <slot name="title"></slot>  <!--具名插槽slot-->
+                    </div>
+
+                </div>
+                <div class="modal-body">
+                    <slot name="body"></slot>
+                </div>
+
+                <div class="modal-footer">
+                    <slot name="footer"></slot>
+                </div>
+
+            </div>
+        </div>
+        <div class='c-background'></div>
+    </div>
+</template>
+
+<script>
+    var
+        modal = {
+            created: function () {
+                var
+                    vm = this,
+                    // 用于当前 Vue 实例的初始化选项。需要在选项中包含自定义属性时会有用处。 e.g. name: 'detailed',
+                    name = this.$options.name,
+                    eventName = this.$options.eventName || 'open.' + name + '.modal';
+                //console.log(name);
+                //console.log(eventName);
+
+                /*vm.$parent 父实例，如果当前实例有的话。
+                *vm.$on( event, callback )
+                *监听当前实例上的自定义事件。事件可以由vm.$emit触发。
+                *回调函数会接收所有传入事件触发函数的额外参数。
+                */
+                this.$parent.$on(eventName, function () {
+                    // Array.prototype.slice.call(arguments)能将具有length属性的对象转成数组
+                    var
+                        args = Array.prototype.slice.call(arguments);
+                        args.push(function () {
+                            vm.$emit('open.modal');
+                    });
+                    //调用方法onModalShow,args数组用item和show接受
+                    vm.onModalShow.apply(vm, args);
+                });
+            },
+
+            methods: {
+                onModalShow: function () {
+                    this.$emit('open.modal');
+                },
+                onModalHide: function () {
+                    // Pass
+                },
+                hideModal: function () {
+                    this.$emit('hide.modal');
+                }
+            },
+
+            components: {
+                modal: {
+                    template: '#modal-template',
+
+                    data: function () {
+                        return {
+                            display: false
+                        }
+                    },
+
+                    props: ['small'],
+
+                    methods: {
+                        show: function () {
+                            this.display = true;
+                        },
+                        hide: function () {
+                            this.display = false;
+                        }
+                    },
+
+                    created: function () {
+                        var
+                            vm = this;
+
+                        this.$parent.$on('open.modal', function () {
+                            vm.show();
+                        });
+
+                        this.$parent.$on('hide.modal', function (cb) {
+                            cb && cb();
+                            vm.hide();
+                        });
+                    },
+
+                    mounted: function () {
+                        var
+                            vm = this,
+                            $el = $(this.$el);
+
+                        this.$options.$el = $el;
+
+                        $el.on('hidden.bs.modal', function () {
+                            vm.hide();
+                        });
+                    },
+
+                    watch: {
+                        display: function (value) {
+                            if (value) {
+                                //手动打开模态框 $('#myModal').modal(options)
+                                this.$options.$el.modal('show');
+                            } else {
+                                this.$options.$el.modal('hide');
+                                this.$parent.onModalHide();
+                            }
+                        }
+                    }
+                }
+            },
+        };
+</script>
